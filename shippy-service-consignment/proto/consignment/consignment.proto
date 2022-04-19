@@ -7,6 +7,9 @@ package consignment;
 
 service ShippingService {
   rpc CreateConsignment(Consignment) returns (Response) {}
+
+  // Created a new method
+  rpc GetConsignments(GetRequest) returns (Response) {}
 }
 
 message Consignment {
@@ -24,7 +27,19 @@ message Container {
   string user_id = 4;
 }
 
+// Created a blank get request
+message GetRequest {}
+
 message Response {
   bool created = 1;
   Consignment consignment = 2;
+
+  // Added a pluralised consignment to our generic response message
+  repeated Consignment consignments = 3;
 }
+
+//protoc --go_out=.
+// --go_opt=paths=source_relative
+// --go-grpc_out=.
+// --go-grpc_opt=require_unimplemented_servers=false
+// --go-grpc_opt=paths=source_relative proto/consignment/consignment.proto

@@ -14,3 +14,5 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220414192740-2d67ff6cf2b4 // indirect
 )
+
+replace github.com/SStoyanov22/shippy/shippy-service-consignment => ../shippy-service-consignment
