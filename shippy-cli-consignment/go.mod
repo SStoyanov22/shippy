@@ -15,3 +15,5 @@ require (
 	google.golang.org/genproto v0.0.0-20220414192740-2d67ff6cf2b4 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
+
+replace github.com/SStoyanov22/shippy/shippy-service-consignment => ../shippy-service-consignment
