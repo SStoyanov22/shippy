@@ -2,69 +2,44 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
-	"net"
-	"sync"
+	"os"
 
 	// Import the generated protobuf code
 	pb "github.com/SStoyanov22/shippy/shippy-service-vessel/proto/vessel"
-	"google.golang.org/grpc"
+	"go-micro.dev/v4"
 )
 
 const (
 	port = ":50052"
 )
 
-type Repository interface {
-	FindAvailable(*pb.Specification) (*pb.Vessel, error)
-}
-
-type VesselRepository struct {
-	mu      sync.RWMutex
-	vessels []*pb.Vessel
-}
-
-type service struct {
-	repo Repository
-}
-
-func (repo *VesselRepository) FindAvailable(spec *pb.Specification) (*pb.Vessel, error) {
-	for _, vessel := range repo.vessels {
-		if spec.Capacity <= vessel.Capacity && spec.MaxWeight <= vessel.MaxWeight {
-			return vessel, nil
-		}
-	}
-
-	return nil, errors.New("No vessel found with that specs")
-}
-
-func (s *service) FindAvailable(ctx context.Context, req *pb.Specification) (*pb.Response, error) {
-	vessel, err := s.repo.FindAvailable(req)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.Response{Vessel: vessel}, nil
-}
-
 func main() {
-	vessels := []*pb.Vessel{
-		{Id: "vessel001", Name: "Boaty McBoatface", MaxWeight: 200000, Capacity: 500},
-	}
-	repo := &VesselRepository{vessels: vessels}
+	service := micro.NewService(
+		micro.Name("shippy.service.vessel"),
+	)
 
-	lis, err := net.Listen("tcp", port)
+	service.Init()
+
+	uri := os.Getenv("DB_HOST")
+
+	client, err := CreateClient(context.Background(), uri, 0)
 	if err != nil {
-		log.Fatalf("Failed to liste %v", err)
+		log.Panic(err)
+	}
+	defer client.Disconnect(context.Background())
+
+	vesselCollection := client.Database("shippy").Collection("vessels")
+	repository := &MongoRepository{vesselCollection}
+
+	h := &handler{repository}
+
+	// Register our implementation with
+	if err := pb.RegisterVesselServiceHandler(service.Server(), h); err != nil {
+		log.Panic(err)
 	}
 
-	s := grpc.NewServer()
-
-	// Register reflection service on gRPC server.
-	pb.RegisterVesselServiceServer(s, &service{repo})
-
-	log.Println("Running on port:", port)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	if err := service.Run(); err != nil {
+		log.Panic(err)
 	}
 }
