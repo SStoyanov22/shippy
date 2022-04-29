@@ -14,7 +14,7 @@ import (
 func main() {
 	// Set-up micro instance
 	service := micro.NewService(
-		micro.Name("shippy.service.consignment"),
+		micro.Name("shippy-service-consignment"),
 	)
 
 	service.Init()
@@ -30,7 +30,7 @@ func main() {
 	consignmentCollection := client.Database("shippy").Collection("consignments")
 
 	repository := &MongoRepository{consignmentCollection}
-	vesselClient := vesselProto.NewVesselService("shippy.service.client", service.Client())
+	vesselClient := vesselProto.NewVesselService("shippy-service-vessel", service.Client())
 	h := &handler{repository, vesselClient}
 
 	// Register handlers

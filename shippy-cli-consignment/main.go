@@ -2,12 +2,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
-
-	"context"
 
 	pb "github.com/SStoyanov22/shippy/shippy-service-consignment/proto/consignment"
 	"go-micro.dev/v4"
@@ -28,10 +27,10 @@ func parseFile(file string) (*pb.Consignment, error) {
 }
 
 func main() {
-	service := micro.NewService(micro.Name("shippy.cli.consignment"))
+	service := micro.NewService(micro.Name("shippy-cli-consignment"))
 	service.Init()
 
-	client := pb.NewShippingService("shippy.service.consignment", service.Client())
+	client := pb.NewShippingService("shippy-service-consignment", service.Client())
 
 	// Contact the server and print out its response.
 	file := defaultFilename
@@ -47,7 +46,7 @@ func main() {
 
 	r, err := client.CreateConsignment(context.Background(), consignment)
 	if err != nil {
-		log.Fatalf("Could not greet: %v", err)
+		log.Fatalf("Could not greet: %v %v", err, consignment)
 	}
 	log.Printf("Created: %t", r.Created)
 
@@ -55,6 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not list consignments: %v", err)
 	}
+
 	for _, v := range getAll.Consignments {
 		log.Println(v)
 	}

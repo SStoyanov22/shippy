@@ -16,7 +16,7 @@ const (
 
 func main() {
 	service := micro.NewService(
-		micro.Name("shippy.service.vessel"),
+		micro.Name("shippy-service-vessel"),
 	)
 
 	service.Init()
