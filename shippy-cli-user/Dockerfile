@@ -8,10 +8,11 @@ WORKDIR /app
 
 ENV GO111MODULE=on
 
-COPY ./shippy-cli-consignment .
+COPY ./shippy-cli-user .
+COPY ./shippy-service-user ../shippy-service-user
 
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o shippy-cli-user *.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o shippy-cli-user
 
 # Run container
 FROM alpine:latest

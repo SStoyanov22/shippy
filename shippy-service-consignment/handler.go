@@ -5,7 +5,6 @@ import (
 
 	pb "github.com/SStoyanov22/shippy/shippy-service-consignment/proto/consignment"
 	vesselProto "github.com/SStoyanov22/shippy/shippy-service-vessel/proto/vessel"
-	"github.com/pkg/errors"
 )
 
 type handler struct {
@@ -25,7 +24,7 @@ func (s *handler) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 		Capacity:  int32(len(req.Containers)),
 	})
 	if vesselResponse == nil {
-		return errors.New("error fetching vessel, returned nil")
+		vesselResponse, err = s.vesselClient.Create(ctx, &vesselProto.Vessel{MaxWeight: req.Weight, Capacity: int32(len(req.Containers))})
 	}
 
 	if err != nil {

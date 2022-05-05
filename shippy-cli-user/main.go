@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	proto "github.com/SStoyanov22/shippy/shippy-service-user/proto/user"
-	"github.com/urfave/cli/v2"
-	"go-micro.dev/v4"
+	micro "go-micro.dev/v4"
 )
 
 func createUser(ctx context.Context, service micro.Service, user *proto.User) error {
@@ -24,52 +24,47 @@ func createUser(ctx context.Context, service micro.Service, user *proto.User) er
 }
 
 func main() {
-	// create and initialise a new service
-	service := micro.NewService(
-		micro.Flags(
-			&cli.StringFlag{
-				Name:  "name",
-				Usage: "Your Name",
-			},
-			&cli.StringFlag{
-				Name:  "email",
-				Usage: "E-Mail",
-			},
-			&cli.StringFlag{
-				Name:  "company",
-				Usage: "Company Name",
-			},
-			&cli.StringFlag{
-				Name:  "password",
-				Usage: "Password",
-			},
-		),
-	)
+	service := micro.NewService(micro.Name("shippy-cli-user"))
+	service.Init()
 
-	service.Init(
-		micro.Action(func(c *cli.Context) error {
-			log.Println(c)
-			name := c.String("name")
-			email := c.String("email")
-			company := c.String("company")
-			password := c.String("password")
+	client := proto.NewUserService("shippy-service-user", service.Client())
+	name := "Stoyan Stoyanov"
+	password := "test1"
+	company := "LTD"
+	email := "ss@tt.com"
+	user := &proto.User{
+		Name:     name,
+		Password: password,
+		Company:  company,
+		Email:    email,
+	}
+	r, err := client.Create(context.Background(), user)
 
-			log.Println("test:", name, email, company, password)
+	if err != nil {
+		log.Fatalf("Could not create: %v", err)
+	}
 
-			ctx := context.Background()
-			user := &proto.User{
-				Name:     name,
-				Email:    email,
-				Company:  company,
-				Password: password,
-			}
+	log.Printf("Created: %s", r.User.Id)
 
-			if err := createUser(ctx, service, user); err != nil {
-				log.Println("error creating user: ", err.Error())
-				return err
-			}
+	getAll, err := client.GetAll(context.Background(), &proto.Request{})
+	if err != nil {
+		log.Fatalf("Could not list users: %v", err)
+	}
+	for _, v := range getAll.Users {
+		log.Println(v)
+	}
 
-			return nil
-		}),
-	)
+	authResponse, err := client.Auth(context.TODO(), &proto.User{
+		Email:    email,
+		Password: password,
+	})
+
+	if err != nil {
+		log.Fatalf("Could not authenticate user: %s error: %v\n", email, err)
+	}
+
+	log.Printf("Your access token is: %s \n", authResponse.Token)
+
+	// let's just exit because
+	os.Exit(0)
 }
